@@ -21,6 +21,7 @@ SELECT l.block_time,
        substring(l.topic3 FROM 13)                           AS account,
        bytearray_to_uint256(substring(l.data FROM 1 FOR 32)) AS amount,
        l.tx_hash,
+       l.tx_index,
        l.index                                               AS log_index
 FROM base.logs l
 WHERE l.contract_address = 0xe55fEE191604cdBeb874F87A28Ca89aED401C303
@@ -29,4 +30,4 @@ WHERE l.contract_address = 0xe55fEE191604cdBeb874F87A28Ca89aED401C303
                    0xf08f338c8905e343697a35fef11af2f611a36658016e0653521354c865373ea7
     )
   AND l.block_time > CAST('2025-07-15' AS timestamp)
-ORDER BY block_time DESC, log_index DESC;
+ORDER BY block_number DESC, tx_index DESC, log_index DESC;

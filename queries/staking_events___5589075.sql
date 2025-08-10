@@ -89,6 +89,7 @@ SELECT l.block_time,
                THEN substring(l.topic2 FROM 13)
            END AS recipient,
        l.tx_hash,
+       l.tx_index,
        l.index AS log_index
 FROM base.logs l
 WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
@@ -102,4 +103,4 @@ WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
                    0x7e77f685b38c861064cb08f2776eb5dfd3c82f652ed9f21221b8c53b75628e51
     )
   AND l.block_time > CAST('2024-12-17' AS timestamp)
-ORDER BY block_time DESC, log_index DESC;
+ORDER BY block_number DESC, tx_index DESC, log_index DESC;

@@ -24,4 +24,4 @@ FROM base.logs l
 WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
   AND l.topic0 = 0x9cc45a93930c8a80c99a1f194086c25c0e14b43109f4a5adfd9689aaa703ec4c -- DelegationProxyDeployed
   AND l.block_time > CAST('2024-12-17' AS timestamp)
-ORDER BY l.block_time DESC, l.index DESC;
+ORDER BY deposit_id DESC;
