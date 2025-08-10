@@ -10,7 +10,7 @@ WITH latest_voting_power AS (SELECT delegate,
                                     new_votes / 1e18 AS current_voting_power
                              FROM (SELECT delegate,
                                           new_votes,
-                                          ROW_NUMBER() OVER (PARTITION BY delegate ORDER BY block_number DESC, log_index DESC) AS rn
+                                          ROW_NUMBER() OVER (PARTITION BY delegate ORDER BY block_number DESC, tx_index DESC, log_index DESC) AS rn
                                    FROM dune.towns_protocol.result_delegate_votes_events) ranked
                              WHERE rn = 1
                                AND new_votes > 0),

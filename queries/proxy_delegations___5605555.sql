@@ -18,7 +18,7 @@ WITH proxy_addresses AS (SELECT DISTINCT proxy_address
                                    l.block_number,
                                    l.tx_hash,
                                    l.index                     AS log_index,
-                                   ROW_NUMBER()                   OVER (PARTITION BY substring(l.topic1 FROM 13) ORDER BY l.block_number DESC, l.index DESC) AS rn
+                                   ROW_NUMBER()                   OVER (PARTITION BY substring(l.topic1 FROM 13) ORDER BY l.block_number DESC, l.tx_index DESC, l.index DESC) AS rn
                             FROM base.logs l
                                      JOIN proxy_addresses pa
                                           ON substring(l.topic1 FROM 13) = pa.proxy_address
@@ -40,4 +40,4 @@ SELECT delegator AS proxy_address,
        log_index
 FROM delegation_changes
 WHERE rn = 1 -- Latest delegation state only
-ORDER BY block_time DESC;
+ORDER BY block_number DESC, log_index DESC;

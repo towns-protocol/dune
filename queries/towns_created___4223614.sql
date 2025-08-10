@@ -21,4 +21,4 @@ WHERE
   -- SpaceCreated(address,uint256,address)
   AND topic0 = 0xe50fc3942f8a2d7e5a7c8fb9488499eba5255b41e18bc3f1b4791402976d1d0b
   AND block_time > CAST('2024-05-31' AS timestamp)
-ORDER BY block_time DESC;
+ORDER BY town_owner_token_id DESC;

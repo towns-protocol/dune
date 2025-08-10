@@ -11,6 +11,7 @@ WITH towns_created AS (SELECT town_address
                                     l.tx_hash,
                                     l.block_time,
                                     l.block_number,
+                                    l.tx_index,
                                     l.index            AS log_index,
                                     l.topic0,
                                     l.topic1,
@@ -37,6 +38,7 @@ WITH towns_created AS (SELECT town_address
                                  tx_hash,
                                  block_time,
                                  block_number,
+                                 tx_index,
                                  log_index,
                                  substring(topic1 FROM 13)    AS member_address,
                                  bytearray_to_uint256(topic2) AS token_id,
@@ -49,6 +51,7 @@ WITH towns_created AS (SELECT town_address
                                      tx_hash,
                                      block_time,
                                      block_number,
+                                     tx_index,
                                      log_index,
                                      bytearray_to_uint256(topic1)                        AS token_id,
                                      bytearray_to_uint256(substring(data FROM 1 FOR 32)) AS expiration
@@ -58,6 +61,7 @@ WITH towns_created AS (SELECT town_address
 -- Mint events with expiration (join mints with their subscription updates)
      mint_events AS (SELECT mm.block_time,
                             mm.block_number,
+                            mm.tx_index,
                             mm.event_type,
                             mm.town_address,
                             mm.token_id,
@@ -74,6 +78,7 @@ WITH towns_created AS (SELECT town_address
 -- Renewal events (SubscriptionUpdate events that don't have MembershipTokenIssued in same tx)
      renewal_events AS (SELECT su.block_time,
                                su.block_number,
+                               su.tx_index,
                                'renewal' AS event_type,
                                su.town_address,
                                su.token_id,
@@ -104,6 +109,7 @@ SELECT block_time,
        member_address,
        expiration,
        tx_hash,
+       tx_index,
        log_index
 FROM all_subscription_events
-ORDER BY block_time DESC, log_index;
+ORDER BY block_number DESC, tx_index DESC, log_index DESC;

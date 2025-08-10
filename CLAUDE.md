@@ -191,10 +191,12 @@ DelegationProxyDeployed: 0x9cc45a93930c8a80c99a1f194086c25c0e14b43109f4a5adfd968
 ### Query Structure
 
 - Use CTE-heavy patterns for complex transformations
-- Standard ordering: `ORDER BY block_time DESC, log_index DESC`
+- Standard ordering (deterministic for logs):
+  `ORDER BY block_number DESC, tx_index DESC, log_index DESC`
+  If tx_index unavailable in your dataset, fall back to (block_number, log_index)
 - COALESCE for NULL handling: `COALESCE(daily_value, 0)`
 - Window functions for cumulative: `SUM(amount) OVER (ORDER BY day)`
-- Latest state pattern: `ROW_NUMBER() OVER (PARTITION BY id ORDER BY block_number DESC, log_index DESC) AS rn`
+- Latest state pattern: `ROW_NUMBER() OVER (PARTITION BY id ORDER BY block_number DESC, tx_index DESC, log_index DESC) AS rn`
 
 ## Materialized Tables (dune.towns_protocol)
 
