@@ -12,6 +12,8 @@ WITH latest_operator_status AS (SELECT substring(l.topic1 FROM 13)    AS operato
                                        bytearray_to_uint256(l.topic2) AS status_code,
                                        l.block_time                   AS status_change_time,
                                        CASE
+                                           WHEN bytearray_to_uint256(l.topic2) = 0 THEN 'Exiting'
+                                           WHEN bytearray_to_uint256(l.topic2) = 1 THEN 'Standby'
                                            WHEN bytearray_to_uint256(l.topic2) = 2 THEN 'Approved'
                                            WHEN bytearray_to_uint256(l.topic2) = 3 THEN 'Active'
                                            END                        AS status,
@@ -19,12 +21,12 @@ WITH latest_operator_status AS (SELECT substring(l.topic1 FROM 13)    AS operato
                                 FROM base.logs l
                                 WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
                                   AND l.topic0 = 0x7db2ae93d80cbf3cf719888318a0b92adff1855bcb01eda517607ed7b0f2183a
-                                  AND bytearray_to_uint256(l.topic2) IN (2, 3) -- Only Approved or Active
                                   AND l.block_time > CAST('2024-05-01' AS timestamp))
 
 SELECT status_change_time,
        operator_address,
        status
 FROM latest_operator_status
-WHERE rn = 1 -- Latest status only
+WHERE rn = 1                -- Latest status only
+  AND status_code IN (2, 3) -- Only currently Approved or Active
 ORDER BY status_change_time DESC;

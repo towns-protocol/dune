@@ -24,7 +24,9 @@ redelegation_pairs AS (
         v1.day,
         v1.delegate AS from_delegate,
         v2.delegate AS to_delegate,
-        ABS(v1.vote_delta) / 1e18 AS redelegation_amount
+        v1.log_index AS from_log_index,
+        v2.log_index AS to_log_index,
+        v2.vote_delta / 1e18 AS redelegation_amount
     FROM vote_changes v1
     INNER JOIN vote_changes v2
         ON v1.tx_hash = v2.tx_hash
@@ -37,7 +39,8 @@ redelegation_pairs AS (
 -- Classify each vote change as redelegation or true flow
 classified_changes AS (
     SELECT 
-        vc.*,
+        vc.day,
+        vc.vote_delta,
         CASE 
             WHEN rp.tx_hash IS NOT NULL THEN 'redelegation'
             WHEN vc.vote_delta > 0 THEN 'inflow'
@@ -47,16 +50,17 @@ classified_changes AS (
     FROM vote_changes vc
     LEFT JOIN redelegation_pairs rp
         ON vc.tx_hash = rp.tx_hash
-        AND (vc.delegate = rp.from_delegate OR vc.delegate = rp.to_delegate)
+        AND ((vc.delegate = rp.from_delegate AND vc.log_index = rp.from_log_index) 
+             OR (vc.delegate = rp.to_delegate AND vc.log_index = rp.to_log_index))
 ),
 
 -- Calculate daily flows by aggregating classified changes
 daily_flows AS (
     SELECT 
         day,
-        SUM(CASE WHEN flow_type = 'inflow' THEN vote_delta / 1e18 END) AS daily_inflow,
-        SUM(CASE WHEN flow_type = 'outflow' THEN ABS(vote_delta) / 1e18 END) AS daily_outflow,
-        SUM(CASE WHEN flow_type = 'redelegation' AND vote_delta > 0 THEN vote_delta / 1e18 END) AS daily_redelegation_volume
+        COALESCE(SUM(CASE WHEN flow_type = 'inflow' THEN vote_delta / 1e18 END), 0) AS daily_inflow,
+        COALESCE(SUM(CASE WHEN flow_type = 'outflow' THEN ABS(vote_delta) / 1e18 END), 0) AS daily_outflow,
+        COALESCE(SUM(CASE WHEN flow_type = 'redelegation' AND vote_delta > 0 THEN vote_delta / 1e18 END), 0) AS daily_redelegation_volume
     FROM classified_changes
     GROUP BY day
 ),
