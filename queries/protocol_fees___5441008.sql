@@ -8,12 +8,8 @@
 WITH subscription_tx AS (SELECT DISTINCT ms.tx_hash, ms.town_address
                          FROM dune.towns_protocol.result_membership_subscriptions ms),
 
-     tip_tx AS (SELECT DISTINCT l.tx_hash, l.contract_address AS town_address
-                FROM base.logs l
-                         JOIN dune.towns_protocol.result_towns_created tc
-                              ON l.contract_address = tc.town_address
-                WHERE l.topic0 = 0x854db29cbd1986b670c0d596bf56847152a0d66e5ddef710408c1fa4ada78f2b
-                  AND l.block_time > CAST('2024-12-01' AS timestamp)),
+     tip_tx AS (SELECT DISTINCT tx_hash, town_address
+                FROM dune.towns_protocol.result_tip_events),
 
 -- Aggregate daily protocol fees by source using materialized ETH flows
      summary_membership_fees
