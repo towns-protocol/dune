@@ -4,7 +4,8 @@
 
 
 -- Get all towns created
-WITH towns_created AS (SELECT town_address
+WITH trading_enabled_date AS (SELECT CAST('2025-05-01' AS timestamp) AS trading_start),
+     towns_created AS (SELECT town_address
                        FROM dune.towns_protocol.result_towns_created),
      -- Track SwapExecuted events and calculate ETH volume
      swap_events AS (SELECT l.block_time,
@@ -24,7 +25,7 @@ WITH towns_created AS (SELECT town_address
                      WHERE
                        -- SwapExecuted(address,address,address,uint256,uint256,address)
                          l.topic0 = 0x300b4a9ac356114be2eaffe0f530cd615f14560df4b634adc11142d1358e8976
-                       AND l.block_time > cast('2025-05-01' AS timestamp)),
+                       AND l.block_time > (SELECT trading_start FROM trading_enabled_date)),
      -- Track protocol fees from SwapRouter to treasury (trading fees)
      router_treasury_traces AS (SELECT t.block_time,
                                        t.value
@@ -34,7 +35,7 @@ WITH towns_created AS (SELECT town_address
                                   AND t.success = true
                                   AND t.call_type = 'call'
                                   AND t.value > 0
-                                  AND t.block_time > cast('2025-05-01' AS timestamp)),
+                                  AND t.block_time > (SELECT trading_start FROM trading_enabled_date)),
      -- Aggregate daily volume in ETH
      summary AS (SELECT date_trunc('day', block_time) AS day, SUM (volume) / 1e18 AS daily_volume
 FROM swap_events

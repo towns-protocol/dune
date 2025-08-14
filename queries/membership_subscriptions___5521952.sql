@@ -2,7 +2,6 @@
 -- query name: Membership Subscriptions
 -- query link: https://dune.com/queries/5521952
 
-
 WITH towns_created AS (SELECT town_address
                        FROM dune.towns_protocol.result_towns_created),
 

@@ -131,6 +131,10 @@ AND l.topic0 IN (0x[SIG1], 0x[SIG2], 0x[SIG3])
 ```sql
 amount / 1e18 AS eth_amount        -- Wei to ETH conversion
 -- ETH placeholder address: 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+
+-- CRITICAL: Always divide before aggregating to prevent uint256 overflow
+SUM(amount / 1e18) AS total_eth    -- ✅ Correct: divide first, then sum
+SUM(amount) / 1e18 AS total_eth    -- ❌ Wrong: can overflow on large sums
 ```
 
 ### Date Patterns
