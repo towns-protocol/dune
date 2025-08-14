@@ -1,10 +1,6 @@
 -- part of a query repo
 -- query name: Towns Created
 -- query link: https://dune.com/queries/4223614
-
-
--- query name: towns created
--- query link: https://dune.com/queries/4223614
 -- materialized table: dune.towns_protocol.result_towns_created
 
 SELECT block_time,

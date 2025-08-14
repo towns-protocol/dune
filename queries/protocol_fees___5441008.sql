@@ -17,7 +17,7 @@ WITH subscription_tx AS (SELECT DISTINCT ms.tx_hash, ms.town_address
 
 -- Aggregate daily protocol fees by source using materialized ETH flows
      summary_membership_fees
-         AS (SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS membership_revenue
+         AS (SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS membership_revenue
 FROM dune.towns_protocol.result_towns_eth_flows ef
     JOIN subscription_tx st
 ON ef.tx_hash = st.tx_hash AND ef."from" = st.town_address
@@ -26,7 +26,7 @@ WHERE ef.flow_type = 'protocol_fee'
     > CAST ('2024-05-01' AS timestamp)
 GROUP BY 1),
     summary_tipping_fees AS (
-SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS tipping_revenue
+SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS tipping_revenue
 FROM dune.towns_protocol.result_towns_eth_flows ef
     JOIN tip_tx tt
 ON ef.tx_hash = tt.tx_hash AND ef."from" = tt.town_address
@@ -35,7 +35,7 @@ WHERE ef.flow_type = 'protocol_fee'
     > CAST ('2024-12-01' AS timestamp)
 GROUP BY 1),
     summary_trading_fees AS (
-SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS trading_revenue
+SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS trading_revenue
 FROM dune.towns_protocol.result_towns_eth_flows ef
 WHERE ef.flow_type = 'protocol_fee'
   AND ef."from" = 0x95A2a333D30c8686dE8D01AC464d6034b9aA7b24
@@ -43,7 +43,7 @@ WHERE ef.flow_type = 'protocol_fee'
     > CAST ('2025-05-01' AS timestamp)
 GROUP BY 1),
     summary_other_fees AS (
-SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS other_revenue
+SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS other_revenue
 FROM dune.towns_protocol.result_towns_eth_flows ef
 WHERE ef.flow_type = 'protocol_fee'
   AND ef."from" IN (SELECT town_address FROM dune.towns_protocol.result_towns_created)

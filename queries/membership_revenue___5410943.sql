@@ -3,13 +3,16 @@
 -- query link: https://dune.com/queries/5410943
 
 
--- Optimized with materialized tables
+-- Tracks daily membership revenue: gross payments, refunds, and protocol fees
+-- Shows both daily amounts and cumulative totals over time
+-- Uses materialized ETH flows table filtered by membership transactions
+-- Divides before aggregating to prevent uint256 overflow
 WITH subscription_transactions AS (SELECT DISTINCT ms.town_address,
                                                    ms.tx_hash
                                    FROM dune.towns_protocol.result_membership_subscriptions ms),
 
 -- Payments coming into towns from membership transactions
-     summary_payments AS (SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS gross_revenue
+     summary_payments AS (SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS gross_revenue
 FROM dune.towns_protocol.result_towns_eth_flows ef
     JOIN subscription_transactions st
 ON ef.tx_hash = st.tx_hash
@@ -21,7 +24,7 @@ GROUP BY 1
 -- Refunds going out of towns from membership transactions (protocol fees already excluded)
     summary_refunds AS (
 SELECT
-    date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS total_refunds
+    date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS total_refunds
 FROM dune.towns_protocol.result_towns_eth_flows ef
     JOIN subscription_transactions st
 ON ef.tx_hash = st.tx_hash
@@ -33,7 +36,7 @@ GROUP BY 1
 -- Protocol fees from membership transactions (pre-classified)
     summary_protocol_fees AS (
 SELECT
-    date_trunc('day', ef.block_time) AS day, SUM (ef.eth_amount) AS protocol_revenue
+    date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS protocol_revenue
 FROM dune.towns_protocol.result_towns_eth_flows ef
     JOIN subscription_transactions st
 ON ef.tx_hash = st.tx_hash

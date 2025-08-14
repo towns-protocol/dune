@@ -4,7 +4,7 @@
 
 
 -- Town ETH Flow Traces - Materialized Table
--- Table: dune.towns_protocol.result_town_traces
+-- Table: dune.towns_protocol.result_towns_eth_flows
 --
 -- IMPORTANT: Flow classification prioritizes protocol fees over town perspective
 -- - Town → Protocol Treasury = 'protocol_fee' (NOT 'town_out')
@@ -19,7 +19,7 @@ SELECT t.tx_hash,
        t.block_number,
        t."from",
        t.to,
-       t.value / 1e18 as eth_amount,
+       t.value,
        CASE
            WHEN t.to = 0x562aA63A64f56245af69b86B4e4be34421f84c81 THEN 'protocol_fee'
            WHEN t.to IN (SELECT town_address FROM towns) THEN 'town_in'
