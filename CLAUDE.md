@@ -152,11 +152,77 @@ DATE_TRUNC('day', block_time) AS day
 
 - Prefer materialized `result_*` tables over raw log parsing
 - Always include time-based filtering: `block_time > CAST('date' AS timestamp)`
-- Use `AND t.success = true` for trace queries
+- Use `AND t.success` for trace queries
 - Filter zero amounts: `WHERE amount > 0`
 - Avoid multiple LEFT JOINs on base.logs - use IN clauses instead
 - Prevent uint256 overflow: keep amounts in wei, convert only for display
 - Single base.logs scan is better than multiple scans with UNION
+
+## Dune SQL Query Optimization
+
+### Partition Pruning & Filtering
+
+- **Use `block_date` for partitioning**: Tables are partitioned by date - filter on `block_date >= DATE 'YYYY-MM-DD'` for best performance
+- **Avoid functions on filter columns**: Use `block_time > '2024-01-01'` not `date_trunc('day', block_time) > '2024-01-01'`
+- **Include block_number in joins**: When joining tables, include block_number alongside tx_hash for partition pruning
+- **Filter early**: Apply WHERE filters before expensive joins/aggregations (predicate pushdown)
+
+### Table Selection Strategy
+
+- **Prefer decoded tables**: Use `[protocol]_[chain].[Contract]_evt_[EventName]` over raw `base.logs`
+- **Raw logs/traces only when necessary**: If using raw tables, always filter by:
+  - Contract address: `logs.address = 0x...`  
+  - Event signature: `logs.topic0 = 0x...`
+  - Time/block range: `block_date >= DATE 'YYYY-MM-DD'`
+- **Never scan full logs/traces tables**: Without filters, queries will timeout on billions of records
+
+### Query Writing Best Practices
+
+- **Select only needed columns**: Avoid `SELECT *` on large tables
+- **Use LIMIT for samples**: Add LIMIT when you only need top-N results
+- **Only sort when necessary**: ORDER BY is expensive on large result sets - omit for materialized tables and intermediate results
+- **UNION ALL over UNION**: Avoid deduplication overhead when combining results
+- **Window functions over self-joins**: Use `OVER()` clauses for running totals and ranks
+- **Approximate aggregates**: Use `approx_distinct()` for faster approximate counts when exact precision isn't critical
+
+### CTE and Subquery Patterns
+
+- **CTEs are inlined, not materialized**: Each CTE reference re-executes the query
+- **Avoid reusing complex CTEs**: If referenced multiple times, consider materialized views
+- **Join smaller tables first**: When joining, start with smaller tables to larger ones
+
+### Data Type Optimization
+
+- **Use VARBINARY for addresses/hashes**: More efficient than VARCHAR for hex data
+- **Keep amounts in wei**: Convert to ETH only for final display to avoid precision loss
+- **Direct comparisons over functions**: Compare raw values for better optimizer hints
+
+### Debugging & Analysis
+
+- **Use EXPLAIN**: Check query execution plan to identify bottlenecks
+- **Review execution statistics**: Check which stages consume most time/data
+- **Test with smaller date ranges first**: Validate query logic before full historical scans
+
+## Materialized Views on Dune
+
+### Key Limitations
+
+- **Full refresh only**: No incremental/append mode - each refresh recomputes entire query
+- **No dependency management**: Must manually coordinate refresh schedules for chained views
+- **Cannot modify existing data**: Only full replacement supported
+
+### When to Use Materialized Views
+
+- **Heavy intermediate results**: Complex aggregations used by multiple queries
+- **Timeout prevention**: Queries exceeding 30-minute limit when run directly
+- **Dashboard optimization**: Pre-compute expensive calculations for faster dashboard loads
+
+### Best Practices
+
+- **Design for full refresh**: Structure queries knowing they'll be fully recomputed
+- **Schedule appropriately**: Balance freshness needs vs. computation cost
+- **Layer materialized views**: Build simpler views on top of complex base views
+- **Document dependencies**: Track which views depend on others for manual refresh coordination
 
 ### Towns Protocol Specifics
 
