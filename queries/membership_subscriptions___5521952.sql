@@ -30,7 +30,7 @@ WITH towns_created AS (SELECT town_address
                                                 0x2f40b0474996b72a4251e00fb9170cdd960deea1dc749772cbbab61395b9b576, -- MembershipTokenIssued
                                                 0x2ec2be2c4b90c2cf13ecb6751a24daed6bb741ae5ed3f7371aabf9402f6d62e8 -- SubscriptionUpdate
                                  )
-                               AND l.block_time > CAST('2024-05-01' AS timestamp)),
+                               AND l.block_date >= DATE '2024-05-01'),
 
 -- Parse mint events
      membership_mints AS (SELECT town_address,

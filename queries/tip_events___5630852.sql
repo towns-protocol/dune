@@ -27,5 +27,5 @@ FROM base.logs l
 WHERE
   -- Tip(uint256 indexed tokenId, address indexed currency, address sender, address receiver, uint256 amount, bytes32 messageId, bytes32 channelId)
     l.topic0 = 0x854db29cbd1986b670c0d596bf56847152a0d66e5ddef710408c1fa4ada78f2b
-  AND l.block_time > CAST('2024-12-01' AS timestamp)
+  AND l.block_date >= DATE '2024-12-01'
 ORDER BY l.block_number DESC, l.tx_index DESC, l.index DESC;

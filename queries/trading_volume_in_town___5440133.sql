@@ -32,7 +32,7 @@ WITH trading_enabled_date AS (SELECT CAST('2025-05-01' AS timestamp) AS trading_
                                 FROM base.traces t
                                 WHERE t."from" = 0x95A2a333D30c8686dE8D01AC464d6034b9aA7b24
                                   AND t.to = 0x562aA63A64f56245af69b86B4e4be34421f84c81
-                                  AND t.success = true
+                                  AND t.success
                                   AND t.call_type = 'call'
                                   AND t.value > 0
                                   AND t.block_time > (SELECT trading_start FROM trading_enabled_date)),

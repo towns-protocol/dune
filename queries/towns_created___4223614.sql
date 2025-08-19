@@ -16,5 +16,5 @@ WHERE
     contract_address = 0x9978c826d93883701522d2CA645d5436e5654252
   -- SpaceCreated(address,uint256,address)
   AND topic0 = 0xe50fc3942f8a2d7e5a7c8fb9488499eba5255b41e18bc3f1b4791402976d1d0b
-  AND block_time > CAST('2024-05-31' AS timestamp)
+  AND block_date >= DATE '2024-05-31'
 ORDER BY town_owner_token_id DESC;

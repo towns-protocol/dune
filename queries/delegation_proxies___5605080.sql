@@ -23,5 +23,5 @@ FROM base.logs l
                   AND se.event_type = 'stake'
 WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
   AND l.topic0 = 0x9cc45a93930c8a80c99a1f194086c25c0e14b43109f4a5adfd9689aaa703ec4c -- DelegationProxyDeployed
-  AND l.block_time > CAST('2024-12-17' AS timestamp)
+  AND l.block_date >= DATE '2024-12-17'
 ORDER BY deposit_id DESC;

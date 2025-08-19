@@ -18,10 +18,9 @@ SELECT t.block_time,
        t.value,
        SUBSTRING(t.input FROM 1 FOR 4) AS function_selector
 FROM base.traces t
-         JOIN towns_created tc ON t.to = tc.town_address
-WHERE t.success = true
+WHERE t.block_date >= DATE '2024-12-01'
+  AND t.success
   AND t.call_type = 'call'
   AND t.value > 0
-  AND t.block_time > CAST('2024-12-01' AS timestamp)
+  AND t.to IN (SELECT town_address FROM towns_created)
   AND SUBSTRING(t.input FROM 1 FOR 4) IN (0x89b10db8, 0xc46be00e)
-ORDER BY t.block_time DESC;
