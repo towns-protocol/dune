@@ -99,7 +99,7 @@ WITH snapshot_timestamp AS (SELECT CAST(FROM_UNIXTIME(1759775762) AS timestamp) 
 -- Get all users staking to the top 250 towns
     user_stakes_to_towns AS (
 SELECT
-    dp.owner AS user_wallet, pd.to_delegate AS town_address, COUNT (DISTINCT dp.proxy_address) AS proxy_count, SUM (COALESCE (pb.current_balance, 0)) / 1e18 AS total_staked_amount
+    dp.owner AS user_wallet, pd.to_delegate AS town_address, COUNT (DISTINCT dp.proxy_address) AS proxy_count, SUM (COALESCE (pb.current_balance, 0) / 1e18) AS total_staked_amount
 FROM dune.towns_protocol.result_delegation_proxies dp
     LEFT JOIN proxy_balances_snapshot pb
 ON dp.proxy_address = pb.proxy_address
