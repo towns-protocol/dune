@@ -27,7 +27,7 @@ SELECT t.tx_hash,
            ELSE 'other'
            END as flow_type
 FROM base.traces t
-WHERE t.block_date >= DATE '2024-05-01'
+WHERE t.block_date >= DATE '2024-05-31'
   AND t.success
   AND t.call_type = 'call'
   AND t.value > 0

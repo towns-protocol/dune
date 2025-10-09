@@ -40,4 +40,3 @@ SELECT delegator AS proxy_address,
        log_index
 FROM delegation_changes
 WHERE rn = 1 -- Latest delegation state only
-ORDER BY block_number DESC, log_index DESC;

@@ -30,4 +30,3 @@ WHERE l.contract_address = 0xe55fEE191604cdBeb874F87A28Ca89aED401C303
                    0xf08f338c8905e343697a35fef11af2f611a36658016e0653521354c865373ea7
     )
   AND l.block_date >= DATE '2025-07-15'
-ORDER BY block_number DESC, tx_index DESC, log_index DESC;

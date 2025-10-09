@@ -1,63 +1,43 @@
 -- part of a query repo
 -- query name: Membership Subscriptions
 -- query link: https://dune.com/queries/5521952
+-- materialized table: dune.towns_protocol.result_membership_subscriptions
 
 WITH towns_created AS (SELECT town_address
                        FROM dune.towns_protocol.result_towns_created),
 
--- Single pass through base.logs for all membership-related events
-     all_membership_logs AS (SELECT l.contract_address AS town_address,
-                                    l.tx_hash,
-                                    l.block_time,
-                                    l.block_number,
-                                    l.tx_index,
-                                    l.index            AS log_index,
-                                    l.topic0,
-                                    l.topic1,
-                                    l.topic2,
-                                    l.data,
-                                    CASE
-                                        WHEN l.topic0 =
-                                             0x2f40b0474996b72a4251e00fb9170cdd960deea1dc749772cbbab61395b9b576
-                                            THEN 'mint'
-                                        WHEN l.topic0 =
-                                             0x2ec2be2c4b90c2cf13ecb6751a24daed6bb741ae5ed3f7371aabf9402f6d62e8
-                                            THEN 'subscription_update'
-                                        END            AS log_type
-                             FROM base.logs l
-                                      JOIN towns_created tc ON l.contract_address = tc.town_address
-                             WHERE l.topic0 IN (
-                                                0x2f40b0474996b72a4251e00fb9170cdd960deea1dc749772cbbab61395b9b576, -- MembershipTokenIssued
-                                                0x2ec2be2c4b90c2cf13ecb6751a24daed6bb741ae5ed3f7371aabf9402f6d62e8 -- SubscriptionUpdate
-                                 )
-                               AND l.block_date >= DATE '2024-05-01'),
+-- MembershipTokenIssued events
+     membership_mints AS (SELECT l.contract_address             AS town_address,
+                                 l.tx_hash,
+                                 l.block_time,
+                                 l.block_number,
+                                 l.tx_index,
+                                 l.index                        AS log_index,
+                                 substring(l.topic1 FROM 13)    AS member_address,
+                                 bytearray_to_uint256(l.topic2) AS token_id,
+                                 'mint'                         AS event_type
+                          FROM base.logs l
+                                   JOIN towns_created tc ON l.contract_address = tc.town_address
+                          -- MembershipTokenIssued(address indexed recipient, uint256 indexed tokenId)
+                          WHERE l.topic0 = 0x2f40b0474996b72a4251e00fb9170cdd960deea1dc749772cbbab61395b9b576
+                            AND l.block_date >= DATE '2024-05-31'),
 
--- Parse mint events
-     membership_mints AS (SELECT town_address,
-                                 tx_hash,
-                                 block_time,
-                                 block_number,
-                                 tx_index,
-                                 log_index,
-                                 substring(topic1 FROM 13)    AS member_address,
-                                 bytearray_to_uint256(topic2) AS token_id,
-                                 'mint'                       AS event_type
-                          FROM all_membership_logs
-                          WHERE log_type = 'mint'),
+-- SubscriptionUpdate events
+     subscription_updates AS (SELECT l.contract_address                                    AS town_address,
+                                     l.tx_hash,
+                                     l.block_time,
+                                     l.block_number,
+                                     l.tx_index,
+                                     l.index                                               AS log_index,
+                                     bytearray_to_uint256(l.topic1)                        AS token_id,
+                                     bytearray_to_uint256(substring(l.data FROM 1 FOR 32)) AS expiration
+                              FROM base.logs l
+                                       JOIN towns_created tc ON l.contract_address = tc.town_address
+                              -- SubscriptionUpdate(uint256 indexed tokenId, uint64 expiration)
+                              WHERE l.topic0 = 0x2ec2be2c4b90c2cf13ecb6751a24daed6bb741ae5ed3f7371aabf9402f6d62e8
+                                AND l.block_date >= DATE '2024-05-31'),
 
--- Parse subscription update events  
-     subscription_updates AS (SELECT town_address,
-                                     tx_hash,
-                                     block_time,
-                                     block_number,
-                                     tx_index,
-                                     log_index,
-                                     bytearray_to_uint256(topic1)                        AS token_id,
-                                     bytearray_to_uint256(substring(data FROM 1 FOR 32)) AS expiration
-                              FROM all_membership_logs
-                              WHERE log_type = 'subscription_update'),
-
--- Mint events with expiration (join mints with their subscription updates)
+-- Mints with expiration data
      mint_events AS (SELECT mm.block_time,
                             mm.block_number,
                             mm.tx_index,
@@ -74,14 +54,14 @@ WITH towns_created AS (SELECT town_address
                                        AND mm.token_id = su.token_id
                                        AND mm.town_address = su.town_address),
 
--- Renewal events (SubscriptionUpdate events that don't have MembershipTokenIssued in same tx)
+-- Renewals only (no corresponding mint)
      renewal_events AS (SELECT su.block_time,
                                su.block_number,
                                su.tx_index,
                                'renewal' AS event_type,
                                su.town_address,
                                su.token_id,
-                               NULL      AS member_address, -- Cannot determine from renewal events alone
+                               NULL      AS member_address, -- Unknown from renewal events
                                su.expiration,
                                su.tx_hash,
                                su.log_index
@@ -90,10 +70,9 @@ WITH towns_created AS (SELECT town_address
                                            ON su.tx_hash = mm.tx_hash
                                                AND su.token_id = mm.token_id
                                                AND su.town_address = mm.town_address
-                        WHERE mm.tx_hash IS NULL -- Exclude mints
-     ),
+                        WHERE mm.tx_hash IS NULL),
 
--- Union all subscription events
+-- All subscription events
      all_subscription_events AS (SELECT *
                                  FROM mint_events
                                  UNION ALL
@@ -111,4 +90,3 @@ SELECT block_time,
        tx_index,
        log_index
 FROM all_subscription_events
-ORDER BY block_number DESC, tx_index DESC, log_index DESC;

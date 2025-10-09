@@ -21,7 +21,7 @@ WITH latest_operator_status AS (SELECT substring(l.topic1 FROM 13)    AS operato
                                 FROM base.logs l
                                 WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
                                   AND l.topic0 = 0x7db2ae93d80cbf3cf719888318a0b92adff1855bcb01eda517607ed7b0f2183a
-                                  AND l.block_date >= DATE '2024-05-01')
+                                  AND l.block_date >= DATE '2024-05-31')
 
 SELECT status_change_time,
        operator_address,
