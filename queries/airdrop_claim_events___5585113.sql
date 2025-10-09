@@ -29,5 +29,4 @@ WHERE l.contract_address = 0xe55fEE191604cdBeb874F87A28Ca89aED401C303
                    0x970af01ab25e63f8131277859b2c17e9a07c2eb257e6db87449000d91c0f8401,
                    0xf08f338c8905e343697a35fef11af2f611a36658016e0653521354c865373ea7
     )
-  AND l.block_time > CAST('2025-07-15' AS timestamp)
-ORDER BY block_number DESC, tx_index DESC, log_index DESC;
+  AND l.block_date >= DATE '2025-07-15'

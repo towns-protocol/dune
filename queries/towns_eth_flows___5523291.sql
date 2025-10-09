@@ -25,15 +25,14 @@ SELECT t.tx_hash,
            WHEN t.to IN (SELECT town_address FROM towns) THEN 'town_in'
            WHEN t."from" IN (SELECT town_address FROM towns) THEN 'town_out'
            ELSE 'other'
-           END        as flow_type
+           END as flow_type
 FROM base.traces t
-WHERE t.success = true
+WHERE t.block_date >= DATE '2024-05-31'
+  AND t.success
   AND t.call_type = 'call'
   AND t.value > 0
-  AND t.block_time > CAST('2024-05-01' AS timestamp)
   AND (
     t.to IN (SELECT town_address FROM towns)
         OR t."from" IN (SELECT town_address FROM towns)
         OR t.to = 0x562aA63A64f56245af69b86B4e4be34421f84c81
     )
-ORDER BY t.block_time DESC;

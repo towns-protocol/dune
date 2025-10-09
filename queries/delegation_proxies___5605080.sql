@@ -21,7 +21,8 @@ FROM base.logs l
          JOIN dune.towns_protocol.result_staking_events se
               ON bytearray_to_uint256(l.topic1) = se.deposit_id
                   AND se.event_type = 'stake'
+                  AND l.block_number = se.block_number
 WHERE l.contract_address = 0x7c0422b31401C936172C897802CF0373B35B7698
   AND l.topic0 = 0x9cc45a93930c8a80c99a1f194086c25c0e14b43109f4a5adfd9689aaa703ec4c -- DelegationProxyDeployed
-  AND l.block_time > CAST('2024-12-17' AS timestamp)
+  AND l.block_date >= DATE '2024-12-17'
 ORDER BY deposit_id DESC;

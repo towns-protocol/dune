@@ -25,7 +25,7 @@ WITH proxy_addresses AS (SELECT DISTINCT proxy_address
                             WHERE l.contract_address = 0x00000000A22C618fd6b4D7E9A335C4B96B189a38
                               AND l.topic0 =
                                   0x3134e8a2e6d97e929a7e54011ea5485d7d196dd5f0ba4d4ef95803e8e3fc257f -- DelegateChanged
-                              AND l.block_time > CAST('2024-12-17' AS timestamp))
+                              AND l.block_date >= DATE '2024-12-17')
 
 SELECT delegator AS proxy_address,
        from_delegate,
@@ -40,4 +40,3 @@ SELECT delegator AS proxy_address,
        log_index
 FROM delegation_changes
 WHERE rn = 1 -- Latest delegation state only
-ORDER BY block_number DESC, log_index DESC;

@@ -19,7 +19,7 @@ FROM dune.towns_protocol.result_towns_eth_flows ef
 ON ef.tx_hash = st.tx_hash AND ef."from" = st.town_address
 WHERE ef.flow_type = 'protocol_fee'
   AND ef.block_time
-    > CAST ('2024-05-01' AS timestamp)
+    > CAST ('2024-05-31' AS timestamp)
 GROUP BY 1),
     summary_tipping_fees AS (
 SELECT date_trunc('day', ef.block_time) AS day, SUM (ef.value / 1e18) AS tipping_revenue
@@ -44,7 +44,7 @@ FROM dune.towns_protocol.result_towns_eth_flows ef
 WHERE ef.flow_type = 'protocol_fee'
   AND ef."from" IN (SELECT town_address FROM dune.towns_protocol.result_towns_created)
   AND ef.block_time
-    > CAST ('2024-05-01' AS timestamp)
+    > CAST ('2024-05-31' AS timestamp)
   AND NOT EXISTS (SELECT 1 FROM subscription_tx st WHERE st.tx_hash = ef.tx_hash)
   AND NOT EXISTS (SELECT 1 FROM tip_tx tt WHERE tt.tx_hash = ef.tx_hash)
 GROUP BY 1),

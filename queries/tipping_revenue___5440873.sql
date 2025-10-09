@@ -27,7 +27,7 @@ WITH tip_events AS (SELECT block_time,
                                                ON t.tx_hash = tt.tx_hash
                                                    AND t."from" = tt.town_address
                                  WHERE t.to = 0x562aA63A64f56245af69b86B4e4be34421f84c81
-                                   AND t.success = true
+                                   AND t.success
                                    AND t.call_type = 'call'
                                    AND t.value > 0
                                    AND t.block_time > cast('2024-12-01' AS timestamp)),

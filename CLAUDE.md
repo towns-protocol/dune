@@ -180,10 +180,14 @@ DATE_TRUNC('day', block_time) AS day
 
 - **Select only needed columns**: Avoid `SELECT *` on large tables
 - **Use LIMIT for samples**: Add LIMIT when you only need top-N results
-- **Only sort when necessary**: ORDER BY is expensive on large result sets - omit for materialized tables and intermediate results
+- **Only sort when necessary**: ORDER BY is expensive on large result sets - omit for materialized tables and
+  intermediate results
 - **UNION ALL over UNION**: Avoid deduplication overhead when combining results
 - **Window functions over self-joins**: Use `OVER()` clauses for running totals and ranks
 - **Approximate aggregates**: Use `approx_distinct()` for faster approximate counts when exact precision isn't critical
+- **Multiple scans vs IN clauses**: Combining multiple scans on `base.logs` with IN may not be necessary - sometimes
+  individual `topic0 = hash` filters in separate CTEs can outperform `topic0 IN (hash1, hash2, ...)` but results are
+  highly variable
 
 ### CTE and Subquery Patterns
 

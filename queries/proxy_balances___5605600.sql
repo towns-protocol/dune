@@ -28,7 +28,7 @@ WITH proxy_addresses AS (SELECT DISTINCT proxy_address
                          FROM base.logs l
                          WHERE l.contract_address = 0x00000000A22C618fd6b4D7E9A335C4B96B189a38
                            AND l.topic0 = 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef -- Transfer
-                           AND l.block_time > CAST('2024-12-17' AS timestamp)
+                           AND l.block_date >= DATE '2024-12-17'
                            AND (substring(l.topic1 FROM 13) IN (SELECT proxy_address FROM proxy_addresses)
                              OR substring(l.topic2 FROM 13) IN (SELECT proxy_address FROM proxy_addresses))),
 
