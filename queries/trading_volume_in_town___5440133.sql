@@ -27,15 +27,12 @@ WITH trading_enabled_date AS (SELECT CAST('2025-05-01' AS timestamp) AS trading_
                          l.topic0 = 0x300b4a9ac356114be2eaffe0f530cd615f14560df4b634adc11142d1358e8976
                        AND l.block_time > (SELECT trading_start FROM trading_enabled_date)),
      -- Track protocol fees from SwapRouter to treasury (trading fees)
-     router_treasury_traces AS (SELECT t.block_time,
-                                       t.value
-                                FROM base.traces t
-                                WHERE t."from" = 0x95A2a333D30c8686dE8D01AC464d6034b9aA7b24
-                                  AND t.to = 0x562aA63A64f56245af69b86B4e4be34421f84c81
-                                  AND t.success
-                                  AND t.call_type = 'call'
-                                  AND t.value > 0
-                                  AND t.block_time > (SELECT trading_start FROM trading_enabled_date)),
+     router_treasury_traces AS (SELECT ef.block_time,
+                                       ef.value
+                                FROM dune.towns_protocol.result_towns_eth_flows ef
+                                WHERE ef."from" = 0x95A2a333D30c8686dE8D01AC464d6034b9aA7b24
+                                  AND ef.flow_type = 'protocol_fee'
+                                  AND ef.block_time > (SELECT trading_start FROM trading_enabled_date)),
      -- Aggregate daily volume in ETH
      summary AS (SELECT date_trunc('day', block_time) AS day, SUM (volume) / 1e18 AS daily_volume
 FROM swap_events
