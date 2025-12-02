@@ -20,17 +20,14 @@ WITH tip_events AS (SELECT block_time,
                                           town_address
                           FROM tip_events),
      -- Track protocol fees from tipping transactions only
-     tipping_treasury_traces AS (SELECT t.block_time,
-                                        t.value
-                                 FROM base.traces t
+     tipping_treasury_traces AS (SELECT ef.block_time,
+                                        ef.value
+                                 FROM dune.towns_protocol.result_towns_eth_flows ef
                                           JOIN tip_transactions tt
-                                               ON t.tx_hash = tt.tx_hash
-                                                   AND t."from" = tt.town_address
-                                 WHERE t.to = 0x562aA63A64f56245af69b86B4e4be34421f84c81
-                                   AND t.success
-                                   AND t.call_type = 'call'
-                                   AND t.value > 0
-                                   AND t.block_time > cast('2024-12-01' AS timestamp)),
+                                               ON ef.tx_hash = tt.tx_hash
+                                                   AND ef."from" = tt.town_address
+                                 WHERE ef.flow_type = 'protocol_fee'
+                                   AND ef.block_time > cast('2024-12-01' AS timestamp)),
      -- Aggregate daily tips in ETH
      summary AS (SELECT date_trunc('day', block_time) AS day, SUM (amount / 1e18) AS daily_tips
 FROM tip_events
